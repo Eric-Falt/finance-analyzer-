@@ -49,14 +49,14 @@ def netCashFlow(transactions):
 ## returns the largest expense
 def largestExpense(transactions):
 
-    largestSoFar = transactions[0]["Amount"]
+    largestSoFar = 0.0
 
-    for row in transactions[1:]:
+    for row in transactions:
         if row["Type"] == "Expense":
-            if largestSoFar["Amount"] > row["Amount"]:
-                largestSoFar = row["Amount"]
+            if largestSoFar < float(row["Amount"]):
+                largestSoFar = float(row["Amount"])
 
-    return float(largestSoFar["Amount"])
+    return largestSoFar
 
 
 ## returns the average expense
@@ -79,10 +79,9 @@ def averageExpense(transactions):
 ## filters transactions based on categories
 def filterTransactions(transactions):
     while True:
-        try: 
-            while True: 
-                try:  
-                    category = int(input("""
+        # loops until the user enters a valid input, or exits
+        while True:
+            category = input("""
                                     Which category would you like to filter by 
                                     1. Date
                                     2. Description
@@ -90,52 +89,48 @@ def filterTransactions(transactions):
                                     4. Amount
                                     5. Type
                                     0. Exit
-                                    """))
-                except ValueError:
-                    print("ERROR: Enter a number")
-                else: 
-                    break
+                                    """)
 
-            match category:
-                case 1:
-                    information = input("Enter the transaction date, format YYYY-MM-DD: ")
-                    category = "Date"
+            if category in ["0", "1", "2", "3", "4", "5"]:
+                break
+            else:
+                print("ERROR: Enter a valid category number")
 
-                case 2:
-                    information = input("Enter the transaction descrption: ")
-                    category = "Description"
+        match category:
+            case "1":
+                information = input("Enter the transaction date, format YYYY-MM-DD: ")
+                category = "Date"
 
-                case 3:
-                    information = input("Enter the transaction category: ")
-                    category = "Category"
+            case "2":
+                information = input("Enter the transaction descrption: ")
+                category = "Description"
 
-                case 4:
-                    information = input("Enter the transaction amount: ")
-                    category = "Amount"
-                    
-                case 5:
-                    information = input("Enter the transaction type: ")
-                    category = "Type"
-                    
-                case 0:
-                    return
-                
-                case _:
-                    print("Please enter a valid category")
-        
-        except ValueError: 
-                        print("Please enter a valid category")
-        else: 
+            case "3":
+                information = input("Enter the transaction category: ")
+                category = "Category"
 
-            printHeaders()
+            case "4":
+                information = input("Enter the transaction amount: ")
+                category = "Amount"
 
-            i = 0
-            for row in transactions:
-                if str(row[category]).lower() == information.lower():
-                    i += 1
-                    printRow(row, i + 1)
-                    
-        
+            case "5":
+                information = input("Enter the transaction type: ")
+                category = "Type"
+
+            case "0":
+                return
+
+            case _:
+                print("Please enter a valid category")
+
+        printHeaders()
+
+        i = 0
+        for row in transactions:
+            if str(row[category]).lower() == information.lower():
+                i += 1
+                printRow(row, i + 1)
+
 
 ## creates a new row in the CSV file
 def addEntry(transactions):
@@ -154,13 +149,21 @@ def addEntry(transactions):
         newTransaction["Amount"] = float(
             input("\nEnter the amount of the transaction: ")
         )
-        newTransaction["Type"] = input("\nEnter the type of the transaction: ")
+
+        ## ensures a correct transaction type
+        while True:
+            newTransaction["Type"] = input("\nEnter the type of the transaction: ")
+
+            if newTransaction["Type"] in ["Income", "Expense"]:
+                break
+            else:
+                print("ERROR: Enter a valid transaction type")
 
         transactions.append(newTransaction)
 
         userInput = int(input("Enter 1 to enter another transaction or 0 to exit: "))
         if userInput == 0:
-                return 
+            return
 
 
 ## delete a specific entry in the CSV file
@@ -186,22 +189,24 @@ def deleteEntry(transactions):
 ## update a specific entry in the CSV file
 def updateEntry(transactions):
     while True:
-        while True: 
-            try: 
-                
+        while True:
+            try:
                 # gets the index of the row to be updated
                 updateIndex = int(
-                    input("Enter the index of the entry to update, or 0 to stop updating: ")
+                    input(
+                        "Enter the index of the entry to update, or 0 to stop updating: "
+                    )
                 )
+
                 break
-            except ValueError: 
-                print("ERROR: Invalid index")
+            except ValueError:
+                print("ERROR: Enter a number")
 
-        if updateIndex >= 0 and updateIndex <= len(transactions):
+        # if the index is 0 don't update any row
+        if updateIndex == 0:
+            return
 
-            # if the index is 0 don't update any row
-            if updateIndex == 0:
-                return
+        if updateIndex >= 1 and updateIndex <= len(transactions):
 
             # fixes the indexing
             updateIndex -= 1
@@ -213,46 +218,57 @@ def updateEntry(transactions):
 
             # exchanges the information with what the user wants to until the user enters exit
             while True:
-                while True: 
-                    
-                        updateChoice = input(
-                            "What information would you like to update (Date, Description, Category, Amount, or Type"
-                        ).lower()
-                        
-                        if updateChoice in ["date", "description", "category", "amount", "type"]:
-                            break
-                        else:
-                            print("Please enter a valid category")
+
+                # runs until the user enters a valid input
+                while True:
+
+                    updateChoice = input("""
+                                        Which category would you like to update (Enter 0 to stop updating) 
+                                        1. Date
+                                        2. Description
+                                        3. Category
+                                        4. Amount
+                                        5. Type
+                                        0. Exit
+                                        """)
+
+                    if updateChoice in ["0", "1", "2", "3", "4", "5"]:
+                        break
+                    else:
+                        print("Please enter a valid category")
 
                 updateInformation = input(
-                    "What information would you like to replace the current information with (Date must be formatted YYYY-MM-DD): "
+                    "What information would you like to replace the current information with (Date must be formatted YYYY-MM-DD, Amount must be a float, and Type must be either 'Income' or 'Expense'): "
                 )
-                    
+
                 match updateChoice:
-                    case "date":
+                    case "1":
                         transactions[updateIndex]["Date"] = updateInformation
 
-                    case "description":
+                    case "2":
                         transactions[updateIndex]["Description"] = updateInformation
 
-                    case "category":
+                    case "3":
                         transactions[updateIndex]["Category"] = updateInformation
 
-                    case "amount":
-                        try:                              
-                            transactions[updateIndex]["Amount"] = float(updateInformation)
+                    case "4":
+                        try:
+                            transactions[updateIndex]["Amount"] = float(
+                                updateInformation
+                            )
                         except ValueError:
                             print("ERROR: Invalid amount")
 
-                    case "type":
+                    case "5":
                         if updateInformation in ["Income", "Expense"]:
                             transactions[updateIndex]["Type"] = updateInformation
                         else:
-                            print("Transaction type must be either 'Income' or 'Expense' (case sensitive)")
-                            
+                            print(
+                                "Transaction type must be either 'Income' or 'Expense' (case sensitive)"
+                            )
+
         else:
             print("Please enter a valid index")
-
 
 
 # helper function that prints the proper headers for a table output
@@ -278,7 +294,8 @@ def printRow(row, i):
         i,
         f". {'':<{indent}}{row['Date']:<20}{row['Description']:<20}{row['Category']:<20}${row['Amount']:<19}{row['Type']}",
     )
-     
+
+
 # creates a condensed financial statement
 def financialStatement(transactions):
     if len(transactions) > 0:
@@ -298,7 +315,7 @@ def financialStatement(transactions):
 
         for category, amount in categories.items():
             print(f"{category:<15}: ${amount:,.2f}")
-    else: 
+    else:
         print("There are no transactions in the CSV")
 
 
@@ -314,4 +331,4 @@ def spendingByCategory(transactions):
             else:
                 categories[row["Category"]] += float(row["Amount"])
 
-    return categories   
+    return categories
