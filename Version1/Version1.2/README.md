@@ -60,3 +60,12 @@ Add data visualization
 Store transactions in a SQLite database
 Create a web interface
 Add automated tests
+Add automated transactions
+
+## TODO
+Validate transaction Dates with Date time format and module (IN PROGRESS: ERIC)
+Handle invalid user input without crashing or losing changes
+Show which CSV row or field 
+Decide what should happen on first run when the CSV file is missing 
+Add automated tests 
+Update README with datetime 
