@@ -2,6 +2,13 @@ import csv_handler
 from datetime import datetime
 
 
+# Dictionary that holds valid date time format lengths
+DATE_FORMATS = {
+    4: "%Y",  # YYYY
+    7: "%m/%Y",  # MM/YYYY
+    10: "%m/%d/%Y",  # MM/DD/YYYY
+}
+
 # Print all of the transactions.
 def view_transactions(transactions):
     _print_headers()
@@ -137,7 +144,7 @@ def filter_transactions(transactions):
 
                     # Try to parse the date, if unable, get another input from the user 
                     try:
-                        date = _parse_date_filter(date)
+                        date, date_len = _parse_date_filter(date)
                     except ValueError:
                         print("Invalid date")
                     else:
@@ -147,17 +154,17 @@ def filter_transactions(transactions):
                     field = "DateTime"
             # Get a transaction description from the user 
             case "2":
-                information = input("Enter the transaction description: ")
+                information = input("Enter the transaction description: ").strip()
                 field = "Description"
             # Get a transaction category from the user 
             case "3":
-                information = input("Enter the transaction category: ")
+                information = input("Enter the transaction category: ").strip()
                 field = "Category"
             # Get a transaction amount from the user 
             case "4":
                 # Get a valid amount from the user 
-                #TODO: FINISH COMMENTS AND FIX FUNCTIONALITY OF FILTER 
                 while True:
+                    # Try to convert input to float, if it throws an error get another value from the user 
                     try:
                         information = float(input("Enter the transaction amount: "))
                     except ValueError:
@@ -167,29 +174,38 @@ def filter_transactions(transactions):
 
                     field = "Amount"
             case "5":
+                # Get a valid tranasction type from the user 
                 while True: 
 
                     information = input(
                         "Enter the transaction type ('Income' or 'Expense'): "
-                    )
+                    ).strip()
 
+                    # If the transaction type is valid continue, otherwise get another input
                     if information in ["Income", "Expense"]:
                         break
                     else:
                         print("Invalid transaction type")
+
                 field = "Type"
+            # Stop filtering 
             case "0":
                 return
-            case _:
-                print("Please enter a valid field")
 
         _print_headers()
 
         match_count = 0
-        for row in transactions:
-            if str(row[field]).lower() == information.lower():
-                match_count += 1
-                _print_row(row, match_count + 1)
+        if field == "Amount":
+            for row in transactions:
+                if row[field] == information:
+                    match_count += 1
+                    _print_row(row, match_count + 1)
+        elif field == "DateTime":
+            for row in transactions:
+                return
+
+
+            
 
 
 # Create a new row in the CSV file.
@@ -333,9 +349,7 @@ def _print_headers():
         f"{'':<5}{'DateTime':<20}{'Description':<20}"
         f"{'Category':<20}{'Amount':<20}{'Type'}"
     )
-    print(
-        "------------------------------------------------------------------------------------------------------------"
-    )
+    print("-", * 50)
 
 
 # Helper function that prints the row with proper formatting.
@@ -390,16 +404,9 @@ def _parse_date_filter(date):
     # Hold the length of date 
     date_len = len(date)
 
-    # Dictionary that holds valid date time format lengths
-    formats = {
-        4: "%Y",  # YYYY
-        7: "%m/%Y",  # MM/YYYY
-        10: "%m/%d/%Y",  # MM/DD/YYYY
-    }
-
     # Try to parse the date to one of the proper formats, and catch any exception given 
     try:
-        parsed_date = datetime.strptime(date, formats[date_len])
+        parsed_date = datetime.strptime(date, DATE_FORMATS[date_len])
     except (ValueError, KeyError):
         raise ValueError("Enter the date as YYYY, MM/YYYY, or MM/DD/YYYY")
     else:
@@ -407,4 +414,5 @@ def _parse_date_filter(date):
         if parsed_date > datetime.now():
             raise ValueError("That date is in the future")
 
-        return parsed_date
+        parsed_date = datetime.strftime(parsed_date, DATE_FORMATS[date_len])
+        return parsed_date, date_len
