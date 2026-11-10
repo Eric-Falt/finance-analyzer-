@@ -57,10 +57,12 @@ Date,Description,Amount
 ## Future Improvements
 Add automatic transaction categorization
 Add data visualization
-Store transactions in a SQLite database
 Create a web interface
 Add automated tests
 Add automated transactions
+
+## Current Storage
+Transactions are stored in a SQLite database and are reloaded when the app starts.
 
 ## TODO
 Validate transaction Dates with Date time format and module (IN PROGRESS: ERIC)

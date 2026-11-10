@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Edit transaction · Finance Analyzer</title>
+  <!-- This page shares the dashboard's visual style, with a focused edit form. -->
+  <style>
+    :root { font-family: Inter, ui-sans-serif, system-ui, sans-serif; color: #17231f; background: #f3f6f3; }
+    body { margin: 0; }
+    header { background: #173c32; color: white; padding: 24px max(24px, calc((100% - 700px) / 2)); }
+    main { max-width: 700px; margin: 32px auto; padding: 0 20px; }
+    .panel { background: white; border: 1px solid #e0e8e2; border-radius: 12px; padding: 24px; }
+    h1 { margin: 0; font-size: 1.4rem; }
+    h2 { margin: 0 0 20px; }
+    form { display: grid; gap: 14px; }
+    label { display: grid; gap: 6px; color: #46564e; font-size: .9rem; }
+    input, select { width: 100%; padding: 11px; border: 1px solid #ccd8cf; border-radius: 7px; font: inherit; }
+    button, a { display: inline-block; border: 0; border-radius: 7px; padding: 10px 14px; color: white; background: #226b52; font: inherit; text-decoration: none; cursor: pointer; }
+    a { color: #226b52; background: #e7f3ec; }
+    .actions { display: flex; gap: 10px; margin-top: 4px; }
+    .notice { margin-bottom: 14px; padding: 11px 14px; border-radius: 8px; background: #fff0e8; color: #963c25; }
+  </style>
+</head>
+<body>
+  <header><h1>Finance Analyzer</h1></header>
+  <main>
+    <!-- Validation errors are shown here so the user can correct the submitted fields. -->
+    {% for category, message in get_flashed_messages(with_categories=true) %}
+      <div class="notice {{ category }}">{{ message }}</div>
+    {% endfor %}
+    <section class="panel">
+      <h2>Edit transaction</h2>
+      <!-- Flask pre-fills the saved values; POST submits edits to the same route. -->
+      <form method="post">
+        <label>Date and time<input name="date" type="datetime-local" value="{{ transaction['DateTime'].strftime('%Y-%m-%dT%H:%M') }}" required></label>
+        <label>Description<input name="description" maxlength="200" value="{{ transaction['Description'] }}" required></label>
+        <label>Category<input name="category" maxlength="100" value="{{ transaction['Category'] }}" required></label>
+        <label>Amount<input name="amount" type="number" min="0.01" step="0.01" value="{{ transaction['Amount'] }}" required></label>
+        <label>Type<select name="type" required>
+          <option value="Expense" {{ "selected" if transaction["Type"] == "Expense" else "" }}>Expense</option>
+          <option value="Income" {{ "selected" if transaction["Type"] == "Income" else "" }}>Income</option>
+        </select></label>
+        <div class="actions"><button type="submit">Save changes</button><a href="{{ url_for('index') }}">Cancel</a></div>
+      </form>
+    </section>
+  </main>
+</body>
+</html>

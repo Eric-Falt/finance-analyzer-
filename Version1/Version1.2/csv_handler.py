@@ -40,7 +40,7 @@ def normalize_row(row):
 
     # if the amount is 0 raise a ValueError
     if normalized["Amount"] == 0 or not math.isfinite(normalized["Amount"]):
-        raise ValueError(f"Invalid transaction amount: {normalized["Amount"]}")
+        raise ValueError(f"Invalid transaction amount: {normalized['Amount']}")
 
     # if the date time is formatted incorrectly raise a ValueError
     try:

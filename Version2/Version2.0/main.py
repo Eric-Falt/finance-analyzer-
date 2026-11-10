@@ -1,21 +1,16 @@
-import csv_handler
+import database
 import finance
 
 
 def main():
     print("Welcome to my financial analyzer program\n")
 
-    # If loading the CSV throws an error, exit the program.
-    try:
-        transactions = csv_handler.load_csv()
-    except ValueError as error:
-        print(f"\n{error}")
-        print("\nExiting...")
-        return
+    database.initialize_database()
+    transactions = database.get_all_transactions()
 
     user_io(transactions)
 
-    csv_handler.rewrite_csv(transactions)
+    database.save_transactions(transactions)
 
 
 # Handles the user's input and output.

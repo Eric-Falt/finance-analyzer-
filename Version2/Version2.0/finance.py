@@ -1,4 +1,4 @@
-import csv_handler
+import database
 from datetime import datetime
 
 
@@ -240,7 +240,7 @@ def add_entry(transactions):
             )
 
             try:
-                new_transaction = csv_handler.normalize_row(new_transaction)
+                new_transaction = database.normalize_transaction(new_transaction)
             except ValueError as error:
                 print(f"\n{error}")
                 print("Please re-enter the new entry")
@@ -248,6 +248,7 @@ def add_entry(transactions):
                 break
         
         transactions.append(new_transaction)
+        new_transaction["id"] = database.add_transaction(new_transaction)
 
         # Ask user if they would like to add another transaction
         while True:
@@ -294,6 +295,9 @@ def delete_entry(transactions):
             while True:
                 confirmation = input("\nType '1' to confirm deletion, or '0' to go back: ")
                 if confirmation == "1":
+                    transaction_to_delete = transactions[del_index]
+                    if "id" in transaction_to_delete:
+                        database.delete_transaction(transaction_to_delete["id"])
                     del transactions[del_index]
                     print(f"Deletion of row {del_index + 1} succeeded")
                     break
@@ -366,11 +370,15 @@ Enter Choice:
                     validation_row["DateTime"] = validation_row["DateTime"].strftime(
                         "%m/%d/%Y %H:%M"
                     )
+                    transaction_id = transactions[update_index].get("id")
                     try:
-                        validated_row = csv_handler.normalize_row(validation_row)
+                        validated_row = database.normalize_transaction(validation_row)
                     except ValueError as error:
                         print(f"Update had an error: {error}")
-                    else: 
+                    else:
+                        if transaction_id is not None:
+                            validated_row["id"] = transaction_id
+                            database.update_transaction(transaction_id, validated_row)
                         transactions[update_index] = validated_row
                         break
                 elif update_choice == "-1":

@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Finance Analyzer</title>
+  <!-- Page-specific styling keeps the dashboard usable without a separate frontend build. -->
+  <style>
+    :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, sans-serif; color: #17231f; background: #f3f6f3; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    header { background: #173c32; color: white; padding: 25px max(24px, calc((100% - 1120px) / 2)); }
+    header h1 { margin: 0; font-size: 1.45rem; }
+    header p { margin: 6px 0 0; color: #c4d9d0; }
+    main { max-width: 1120px; margin: 28px auto; padding: 0 20px; }
+    .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin-bottom: 22px; }
+    .card, .panel { background: white; border: 1px solid #e0e8e2; border-radius: 12px; box-shadow: 0 3px 12px #163c3210; }
+    .card { padding: 18px; }
+    .card span { display: block; color: #62736b; font-size: .85rem; }
+    .card strong { display: block; margin-top: 8px; font-size: 1.45rem; }
+    .layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 18px; align-items: start; }
+    .panel { padding: 20px; }
+    h2 { margin: 0 0 16px; font-size: 1.1rem; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: .92rem; }
+    th { color: #62736b; font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; }
+    th, td { padding: 12px 9px; border-bottom: 1px solid #edf1ed; white-space: nowrap; }
+    .amount { text-align: right; font-variant-numeric: tabular-nums; }
+    .badge { display: inline-block; border-radius: 99px; padding: 4px 9px; font-size: .78rem; background: #e7f3ec; color: #236449; }
+    .badge.expense { background: #fff0e8; color: #a64c27; }
+    form { display: grid; gap: 12px; }
+    label { display: grid; gap: 5px; color: #46564e; font-size: .85rem; }
+    input, select { width: 100%; padding: 10px; border: 1px solid #ccd8cf; border-radius: 7px; color: inherit; background: white; font: inherit; }
+    button, .button { border: 0; border-radius: 7px; padding: 9px 12px; color: white; background: #226b52; font: inherit; text-decoration: none; cursor: pointer; }
+    button:hover, .button:hover { background: #174e3c; }
+    .actions { display: flex; align-items: center; gap: 8px; }
+    .actions .button { padding: 7px 10px; font-size: .85rem; }
+    .delete { background: #a64335; }
+    .delete:hover { background: #813126; }
+    .notice { margin-bottom: 14px; padding: 11px 14px; border-radius: 8px; background: #e7f3ec; color: #236449; }
+    .notice.error { background: #fff0e8; color: #963c25; }
+    .empty { color: #687970; text-align: center; padding: 28px 8px; }
+    @media (max-width: 760px) { .layout { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Finance Analyzer</h1>
+    <p>Your transactions and cash flow, at a glance.</p>
+  </header>
+  <main>
+    <!-- Flask flash messages show the result of the last add, edit, or delete action. -->
+    {% for category, message in get_flashed_messages(with_categories=true) %}
+      <div class="notice {{ category }}">{{ message }}</div>
+    {% endfor %}
+    <!-- These totals are calculated in app.py from the saved transaction list. -->
+    <section class="summary" aria-label="Financial summary">
+      <div class="card"><span>Total income</span><strong>${{ "%.2f"|format(total_income) }}</strong></div>
+      <div class="card"><span>Total expenses</span><strong>${{ "%.2f"|format(total_expenses) }}</strong></div>
+      <div class="card"><span>Net cash flow</span><strong>${{ "%.2f"|format(net_cash_flow) }}</strong></div>
+    </section>
+    <div class="layout">
+      <!-- Flask fills this table from SQLite; each row links to its edit/delete routes. -->
+      <section class="panel">
+        <h2>Transactions</h2>
+        {% if transactions %}
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Type</th><th class="amount">Amount</th><th>Actions</th></tr></thead>
+              <tbody>
+                {% for transaction in transactions %}
+                  <tr>
+                    <td>{{ transaction["DateTime"].strftime("%b %d, %Y %H:%M") }}</td>
+                    <td>{{ transaction["Description"] }}</td>
+                    <td>{{ transaction["Category"] }}</td>
+                    <td><span class="badge {{ transaction['Type']|lower }}">{{ transaction["Type"] }}</span></td>
+                    <td class="amount">${{ "%.2f"|format(transaction["Amount"]) }}</td>
+                    <td>
+                      <div class="actions">
+                        <a class="button" href="{{ url_for('edit_transaction', transaction_id=transaction['id']) }}">Edit</a>
+                        <form method="post" action="{{ url_for('delete_transaction', transaction_id=transaction['id']) }}" onsubmit="return confirm('Delete this transaction?')">
+                          <button class="delete" type="submit">Delete</button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p class="empty">No transactions yet. Add one to get started.</p>
+        {% endif %}
+      </section>
+      <!-- Submitting this form sends transaction fields to the add route in app.py. -->
+      <section class="panel">
+        <h2>Add transaction</h2>
+        <form method="post" action="{{ url_for('add_transaction') }}">
+          <label>Date and time<input name="date" type="datetime-local" required></label>
+          <label>Description<input name="description" maxlength="200" required></label>
+          <label>Category<input name="category" maxlength="100" required></label>
+          <label>Amount<input name="amount" type="number" min="0.01" step="0.01" required></label>
+          <label>Type<select name="type" required><option value="Expense">Expense</option><option value="Income">Income</option></select></label>
+          <button type="submit">Save transaction</button>
+        </form>
+      </section>
+    </div>
+  </main>
+</body>
+</html>
