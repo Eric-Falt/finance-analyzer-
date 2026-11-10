@@ -3,16 +3,16 @@
 This is a commandline finance analyzer app that reads transactions from a csv. Using this information it can calculate income, exepenses, net cash flow, and other impotant statistics. 
 
 ## Features 
-- Read all transactions from a csv file 
+- Read all transactions from a sqLite3 database  
 - Print a comprehensive financial statement 
 - Filter transactions by category 
-- Add a transaction to the CSV
-- Delete a transaction from the CSV 
-- Update a transaction in the CSV
+- Add a transaction to the database
+- Delete a transaction from the database 
+- Update a transaction in the database
 
 ## Technologies 
 Python 
-SQL
+sqLite3
 
 ## How to Run 
 1. Clone the repository: 
@@ -47,7 +47,7 @@ Example:
 
 Enter choice:
 
-Transactions are stored in a CSV file using the following format:
+Transactions are stored in a database using the following format:
 
 Date,Description,Amount
 2026-09-01,Paycheck,1250.00
